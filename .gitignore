@@ -1,0 +1,22 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Erlang template
+.eunit
+deps
+*.o
+*.d
+*.beam
+*.plt
+erl_crash.dump
+ebin/*.beam
+rel/example_project
+.concrete/DEV_MODE
+.rebar
+
+/.idea/
+/crawlera_proxy_provisioner.iml
+/.erlang.mk/
+/ebin/
+/log/
+!/docker/cron.d/
+*.swp
+*.swo
