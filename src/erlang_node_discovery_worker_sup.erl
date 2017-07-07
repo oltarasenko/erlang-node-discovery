@@ -1,4 +1,4 @@
--module(discovery_workers_sup).
+-module(erlang_node_discovery_worker_sup).
 -behaviour(supervisor).
 
 -export([start_link/0]).
@@ -6,14 +6,17 @@
 
 -export([start_worker/2]).
 
+
 start_link() ->
 	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+
 
 -spec start_worker(Host, Port) -> {ok, pid()} when
       Host :: binary(),
       Port :: pos_integer().
 start_worker(Host, Port) ->
     supervisor:start_child(?MODULE, [{Host, Port}]).
+
 
 init([]) ->
 	ChildSpec = {

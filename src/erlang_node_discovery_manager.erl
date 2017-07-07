@@ -1,4 +1,4 @@
--module(discovery_workers_manager).
+-module(erlang_node_discovery_manager).
 -behaviour(gen_server).
 
 %% API.
@@ -25,11 +25,10 @@ start_link() ->
 %% gen_server.
 
 init([]) ->
-    Opts = application:get_env(node_discovery),
-
-    Hosts = proplists:get_value(hosts, Opts),
-    Nodes = proplists:get_value(nodes, Opts),
-    RegisterCallback = proplists:get_value(register_callback, Opts),
+    Hosts = application:get_env(erlang_node_discovery, hosts, []),
+    Nodes = application:get_env(erlang_node_discovery, nodes, []),
+    {Mod, Func} = appication:get_env(erlang_node_discovery, register_callback),
+    RegisterCallback = fun Mod:Func/2,
     lists:foreach(
         fun({Host, {NodeName, Port}}) ->
 

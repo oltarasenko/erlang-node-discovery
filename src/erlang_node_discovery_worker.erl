@@ -1,4 +1,4 @@
--module(discovery_worker).
+-module(erlang_node_discovery_worker).
 -behaviour(gen_server).
 
 %% API.
