@@ -13,6 +13,7 @@
 -export([code_change/3]).
 
 -record(state, {
+    hosts :: binary()
 }).
 
 %% API.
@@ -28,6 +29,17 @@ init([]) ->
 
     Hosts = proplists:get_value(hosts, Opts),
     Nodes = proplists:get_value(nodes, Opts),
+    RegisterCallback = proplists:get_value(register_callback, Opts),
+    lists:foreach(
+        fun({Host, {NodeName, Port}}) ->
+
+            HostFullName = list_to_atom(
+                io_lib:format("~s@~s", [NodeName, Host])
+            ),
+            {ok, _Pid} = discovery_workers_sup:start_worker(HostFullName, Port, RegisterCallback)
+        end,
+        [{Host, Node} || Host <- Hosts, Node <-Nodes]
+    ),
 
 	{ok, #state{}}.
 

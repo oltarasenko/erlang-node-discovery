@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API.
--export([start_link/0]).
+-export([start_link/3]).
 
 %% gen_server.
 -export([init/1]).
@@ -13,19 +13,25 @@
 -export([code_change/3]).
 
 -record(state, {
+    host :: atom(),
+    port :: pos_integer()
 }).
 
 %% API.
 
--spec start_link() -> {ok, pid()}.
-start_link() ->
-	gen_server:start_link(?MODULE, [], []).
+-spec start_link(Host, Port, CallbackFun) -> Result when
+    Host :: binary(),
+    Port :: pos_integer(),
+    CallbackFun :: fun(),
+    Result :: {ok, pid()}.
+start_link(Host, Port, CallbackFun) ->
+	gen_server:start_link(?MODULE, [Host, Port, CallbackFun], []).
 
 %% gen_server.
 
-init(Host) ->
-    error_logger:info_msg("DBG: ~p", [Host]),
-	{ok, #state{}}.
+init([Host, Port, {Module, Function}]) ->
+    Module:Function(Host, Port),
+    {ok, #state{host = Host, port = Port}}.
 
 handle_call(_Request, _From, State) ->
 	{reply, ignored, State}.
