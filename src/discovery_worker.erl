@@ -23,7 +23,8 @@ start_link() ->
 
 %% gen_server.
 
-init([]) ->
+init(Host) ->
+    error_logger:info_msg("DBG: ~p", [Host]),
 	{ok, #state{}}.
 
 handle_call(_Request, _From, State) ->
