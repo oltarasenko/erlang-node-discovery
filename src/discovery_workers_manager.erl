@@ -24,6 +24,11 @@ start_link() ->
 %% gen_server.
 
 init([]) ->
+    Opts = application:get_env(node_discovery),
+
+    Hosts = proplists:get_value(hosts, Opts),
+    Nodes = proplists:get_value(nodes, Opts),
+
 	{ok, #state{}}.
 
 handle_call(_Request, _From, State) ->
