@@ -29,8 +29,7 @@ start_link(Node) ->
 %% gen_server.
 
 init(Node) ->
-    error_logger:info_msg("DBG: ~p", ["NODE PASSED"]),
-    net_kernel:monitor_nodes(true),
+    ok = net_kernel:monitor_nodes(true),
     {ok, #state{node = Node}}.
 
 handle_call(_Request, _From, State) ->

@@ -43,7 +43,6 @@ init([]) ->
         [{Host, Node} || Host <- Hosts, Node <-Nodes]
     ),
 	{ok, #state{workers = Workers}}.
-    % {ok, #state{}}.
 
 
 handle_call(_Request, _From, State) ->
