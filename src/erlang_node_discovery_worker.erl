@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API.
--export([start_link/3]).
+-export([start_link/1]).
 
 %% gen_server.
 -export([init/1]).
@@ -13,25 +13,25 @@
 -export([code_change/3]).
 
 -record(state, {
-    host :: atom(),
-    port :: pos_integer()
+    node :: atom()
 }).
 
+-define(PING_TIMER, 5000).
 %% API.
 
--spec start_link(Host, Port, CallbackFun) -> Result when
-    Host :: binary(),
-    Port :: pos_integer(),
-    CallbackFun :: fun(),
+-spec start_link(Node) -> Result when
+    Node :: atom(),
     Result :: {ok, pid()}.
-start_link(Host, Port, CallbackFun) ->
-	gen_server:start_link(?MODULE, [Host, Port, CallbackFun], []).
+start_link(Node) ->
+    error_logger:info_msg("DBG: ~p", ["Start link called"]),
+	gen_server:start_link(?MODULE, Node, []).
 
 %% gen_server.
 
-init([Host, Port, {Module, Function}]) ->
-    Module:Function(Host, Port),
-    {ok, #state{host = Host, port = Port}}.
+init(Node) ->
+    error_logger:info_msg("DBG: ~p", ["NODE PASSED"]),
+    net_kernel:monitor_nodes(true),
+    {ok, #state{node = Node}}.
 
 handle_call(_Request, _From, State) ->
 	{reply, ignored, State}.
@@ -39,6 +39,15 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Msg, State) ->
 	{noreply, State}.
 
+handle_info({nodedown, Node}, State = #state{node = Node}) ->
+    erlang:send_after(?PING_TIMER, self(), connect),
+    {noreply, State};
+handle_info(connect, State = #state{node = Node}) ->
+    case net_adm:ping(Node) of
+        pong -> ok;
+        pang -> erlang:send_after(?PING_TIMER, self(), connect)
+    end,
+    {noreply, State};
 handle_info(_Info, State) ->
 	{noreply, State}.
 

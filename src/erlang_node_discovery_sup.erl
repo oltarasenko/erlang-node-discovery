@@ -9,8 +9,12 @@ start_link() ->
 
 init([]) ->
     WorkersSup = {
-        erlang_node_discovery_worker_sup, {erlang_node_discovery_worker_sup, start_link, []}, permanent,
-        5000, supervisor, [erlang_node_discovery_worker_sup]
+        erlang_node_discovery_worker_sup,
+        {erlang_node_discovery_worker_sup, start_link, []},
+        permanent,
+        5000,
+        supervisor,
+        [erlang_node_discovery_worker_sup]
     },
     WorkersManager =  {
         erlang_node_discovery_manager, {erlang_node_discovery_manager, start_link, []}, permanent,

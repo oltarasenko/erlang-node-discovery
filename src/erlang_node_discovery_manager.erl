@@ -13,7 +13,8 @@
 -export([code_change/3]).
 
 -record(state, {
-    hosts :: binary()
+    hosts   :: binary(),
+    workers :: list()
 }).
 
 %% API.
@@ -27,20 +28,23 @@ start_link() ->
 init([]) ->
     Hosts = application:get_env(erlang_node_discovery, hosts, []),
     Nodes = application:get_env(erlang_node_discovery, nodes, []),
-    {Mod, Func} = appication:get_env(erlang_node_discovery, register_callback),
-    RegisterCallback = fun Mod:Func/2,
-    lists:foreach(
-        fun({Host, {NodeName, Port}}) ->
+    {_Mod, _RegisterCallback} = application:get_env(
+        erlang_node_discovery, register_callback
+    ),
 
-            HostFullName = list_to_atom(
-                io_lib:format("~s@~s", [NodeName, Host])
-            ),
-            {ok, _Pid} = discovery_workers_sup:start_worker(HostFullName, Port, RegisterCallback)
+    Workers = lists:map(
+        fun({Host, {NodeName, _Port}}) ->
+
+            HostFullName = list_to_atom(lists:flatten(io_lib:format("~s@~s", [NodeName, Host]))),
+            % Mod:RegisterCallback(list_to_atom(HostFullName), Port),
+            {ok, Pid} = erlang_node_discovery_worker_sup:start_worker(HostFullName),
+            Pid
         end,
         [{Host, Node} || Host <- Hosts, Node <-Nodes]
     ),
+	{ok, #state{workers = Workers}}.
+    % {ok, #state{}}.
 
-	{ok, #state{}}.
 
 handle_call(_Request, _From, State) ->
 	{reply, ignored, State}.
