@@ -8,6 +8,11 @@ SHELL_OPTS = -boot start_sasl -s erlang_node_discovery_app start -config config/
 BUILD_DEPS = rewrite_logging
 dep_rewrite_logging = git https://github.com/dmzmk/rewrite_logging 0.1.0
 
+
+compile: all
+
+
 devel: all shell
+
 
 include erlang.mk
