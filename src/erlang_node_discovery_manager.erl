@@ -3,7 +3,7 @@
 
 %% API.
 -export([start_link/0]).
--export([add_node/2]).
+-export([add_node/3]).
 -export([remove_node/1]).
 -export([list_nodes/0]).
 -export([get_info/0]).
@@ -17,7 +17,7 @@
 -export([code_change/3]).
 
 -record(state, {
-    db_callback  :: module(), %% add_node/2, remove_node/1, list_nodes/0
+    db_callback  :: module(), %% add_node/3, remove_node/1, list_nodes/0
     workers      :: map()     %% node -> worker_pid()
 }).
 
@@ -27,9 +27,9 @@ start_link() ->
 	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 
--spec add_node(node(), inet:port_number()) -> ok.
-add_node(Node, Port) ->
-    gen_server:call(?MODULE, {add_node, Node, Port}, infinity).
+-spec add_node(node(), inet:hostname(), inet:port_number()) -> ok.
+add_node(Node, Host, Port) ->
+    gen_server:call(?MODULE, {add_node, Node, Host, Port}, infinity).
 
 
 -spec remove_node(node()) -> ok.
@@ -37,7 +37,7 @@ remove_node(Node) ->
     gen_server:call(?MODULE, {remove_node, Node}, infinity).
 
 
--spec list_nodes() -> [{node(), inet:port_number()}].
+-spec list_nodes() -> [{node(), inet:hostname(), inet:port_number()}].
 list_nodes() ->
     gen_server:call(?MODULE, list_nodes, infinity).
 
@@ -61,15 +61,15 @@ init([]) ->
     _ = [
         begin
             Node = list_to_atom(lists:flatten(io_lib:format("~s@~s", [NodeName, Host]))),
-            Callback:add_node(Node, Port),
+            Callback:add_node(Node, Host, Port),
             error_logger:info_msg("Added static node to db ~s~n", [Node])
         end || {NodeName, Port} <- NodePorts, Host <- Hosts
     ],
 	{ok, reinit_workers(#state{workers = #{}, db_callback = Callback})}.
 
 
-handle_call({add_node, Node, Port}, _From, State = #state{db_callback = Callback}) ->
-    ok = Callback:add_node(Node, Port),
+handle_call({add_node, Node, Host, Port}, _From, State = #state{db_callback = Callback}) ->
+    ok = Callback:add_node(Node, Host, Port),
     {reply, ok, reinit_workers(State)};
 
 handle_call({remove_node, Node}, _From, State = #state{db_callback = Callback}) ->
@@ -141,7 +141,7 @@ reinit_workers(State) ->
       State    :: #state{},
       NewState :: #state{}.
 add_workers(State = #state{db_callback = Callback, workers = Workers}) ->
-    FoldlFun = fun({Node, _Port}, TmpWorkers) ->
+    FoldlFun = fun({Node, {_Host, _Port}}, TmpWorkers) ->
         case maps:find(Node, TmpWorkers) of
             error ->
                 {ok, Pid} = erlang_node_discovery_worker_sup:start_worker(Node),
@@ -159,7 +159,7 @@ add_workers(State = #state{db_callback = Callback, workers = Workers}) ->
       State    :: #state{},
       NewState :: #state{}.
 remove_workers(State = #state{db_callback = Callback, workers = Workers}) ->
-    Nodes = [Node || {Node, _Port} <- Callback:list_nodes()],
+    Nodes = [Node || {Node, {_Host, _Port}} <- Callback:list_nodes()],
     FoldFun = fun(Node, Pid, TmpWorkers) ->
         case lists:member(Node, Nodes) of
             true ->

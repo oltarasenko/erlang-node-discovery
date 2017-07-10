@@ -52,9 +52,9 @@ manager_test_() ->
             ),
             ?assertEqual(
                 [
-                    {'a@host1', 11}, {'a@host2', 11}, {'a@host3', 11},
-                    {'b@host1', 12}, {'b@host2', 12}, {'b@host3', 12},
-                    {'c@host1', 13}, {'c@host2', 13}, {'c@host3', 13}
+                    {'a@host1', {"host1", 11}}, {'a@host2', {<<"host2">>, 11}}, {'a@host3', {host3, 11}},
+                    {'b@host1', {"host1", 12}}, {'b@host2', {<<"host2">>, 12}}, {'b@host3', {host3, 12}},
+                    {'c@host1', {"host1", 13}}, {'c@host2', {<<"host2">>, 13}}, {'c@host3', {host3, 13}}
                 ],
                 lists:sort(erlang_node_discovery_manager:list_nodes())
             )
@@ -65,7 +65,7 @@ manager_test_() ->
                 [],
                 proplists:get_value(workers, erlang_node_discovery_manager:get_info(), [])
             ),
-            ?assertEqual(ok, erlang_node_discovery_manager:add_node('some@node', some_port)),
+            ?assertEqual(ok, erlang_node_discovery_manager:add_node('some@node', some_host, some_port)),
             ?assertMatch(
                 [{'some@node', _}],
                 proplists:get_value(workers, erlang_node_discovery_manager:get_info(), [])
@@ -77,7 +77,7 @@ manager_test_() ->
                 [],
                 proplists:get_value(workers, erlang_node_discovery_manager:get_info(), [])
             ),
-            erlang_node_discovery_manager:add_node('some@node', some_port),
+            erlang_node_discovery_manager:add_node('some@node', some_host, some_port),
             erlang_node_discovery_manager:remove_node('some@node'),
             ?assertEqual(
                 [],
@@ -91,7 +91,7 @@ manager_test_() ->
                 [],
                 proplists:get_value(workers, erlang_node_discovery_manager:get_info(), [])
             ),
-            erlang_node_discovery_manager:add_node('some@node', some_port),
+            erlang_node_discovery_manager:add_node('some@node', some_host, some_port),
             [{'some@node', WPid}] = proplists:get_value(workers, erlang_node_discovery_manager:get_info(), []),
             erlang:exit(WPid, kill),
             erlang:monitor(process, WPid),
