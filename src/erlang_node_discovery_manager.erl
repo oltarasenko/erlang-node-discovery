@@ -18,6 +18,7 @@
 
 -record(state, {
     db_callback  :: module(), %% add_node/3, remove_node/1, list_nodes/0
+    resolve_func :: fun((term()) -> term()),
     workers      :: map()     %% node -> worker_pid()
 }).
 
@@ -55,21 +56,25 @@ get_info() ->
 init([]) ->
     Callback = application:get_env(erlang_node_discovery, db_callback, erlang_node_discovery_db),
     error_logger:info_msg("Using ~p as node db~n", [Callback]),
+    ResolveFunc = case application:get_env(erlang_node_discovery, resolve_func) of
+        undefined -> fun(H) -> H end;
+        {ok, {M, F}} -> fun M:F/1
+    end,
     Hosts = application:get_env(erlang_node_discovery, hosts, []),
     NodePorts = application:get_env(erlang_node_discovery, node_ports, []),
     %% adding static nodes to db
     _ = [
         begin
             Node = list_to_atom(lists:flatten(io_lib:format("~s@~s", [NodeName, Host]))),
-            Callback:add_node(Node, Host, Port),
+            Callback:add_node(Node, ResolveFunc(Host), Port),
             error_logger:info_msg("Added static node to db ~s~n", [Node])
         end || {NodeName, Port} <- NodePorts, Host <- Hosts
     ],
-	{ok, reinit_workers(#state{workers = #{}, db_callback = Callback})}.
+	{ok, reinit_workers(#state{workers = #{}, resolve_func = ResolveFunc, db_callback = Callback})}.
 
 
-handle_call({add_node, Node, Host, Port}, _From, State = #state{db_callback = Callback}) ->
-    ok = Callback:add_node(Node, Host, Port),
+handle_call({add_node, Node, Host, Port}, _From, State = #state{db_callback = Callback, resolve_func = RF}) ->
+    ok = Callback:add_node(Node, RF(Host), Port),
     {reply, ok, reinit_workers(State)};
 
 handle_call({remove_node, Node}, _From, State = #state{db_callback = Callback}) ->
