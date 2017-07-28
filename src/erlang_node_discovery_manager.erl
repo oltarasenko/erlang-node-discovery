@@ -56,8 +56,13 @@ get_info() ->
 init([]) ->
     Callback = application:get_env(erlang_node_discovery, db_callback, erlang_node_discovery_db),
     error_logger:info_msg("Using ~p as node db~n", [Callback]),
+    case application:get_env(erlang_node_discovery, cookie) of
+        undefined -> ok;
+        {ok, Cookie} -> erlang:set_cookie(node(), Cookie)
+    end,
     ResolveFunc = case application:get_env(erlang_node_discovery, resolve_func) of
         undefined -> fun(H) -> H end;
+        {ok, F} when is_function(F, 1) -> F;
         {ok, {M, F}} -> fun M:F/1
     end,
     Hosts = application:get_env(erlang_node_discovery, hosts, []),
