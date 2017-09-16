@@ -1,6 +1,6 @@
 PROJECT = erlang_node_discovery
 PROJECT_DESCRIPTION = erlang node discovery application
-PROJECT_VERSION = 0.1.0
+PROJECT_VERSION = 0.1.3
 
 ERLC_OPTS = +'{parse_transform, rewrite_logging}'
 SHELL_OPTS = -boot start_sasl -s erlang_node_discovery_app start -config config/devel.config
