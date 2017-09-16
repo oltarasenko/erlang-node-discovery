@@ -40,11 +40,17 @@ handle_cast(Msg, State) ->
 	{noreply, State}.
 
 
-handle_info({nodeup, Node}, State) ->
+handle_info({nodeup, Node}, State = #state{node = Node}) ->
     {noreply, State#state{node_up = true}};
 
-handle_info({nodedown, Node}, State) ->
+handle_info({nodeup, _}, State) ->
+    {noreply, State};
+
+handle_info({nodedown, Node}, State = #state{node = Node}) ->
     {noreply, init_timer(State#state{node_up = false})};
+
+handle_info({nodedown, _}, State) ->
+    {noreply, State};
 
 handle_info(ping, State = #state{node_up = true}) ->
     {noreply, State};
