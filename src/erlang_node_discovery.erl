@@ -24,6 +24,6 @@ remove_node(Node) ->
     erlang_node_discovery_manager:remove_node(Node).
 
 
--spec list_nodes() -> [{node(), inet:port_number()}].
+-spec list_nodes() -> [{node(), {inet:hostname(), inet:port_number()}}].
 list_nodes() ->
     erlang_node_discovery_manager:list_nodes().

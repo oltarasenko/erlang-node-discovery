@@ -38,7 +38,7 @@ remove_node(Node) ->
     gen_server:call(?MODULE, {remove_node, Node}, infinity).
 
 
--spec list_nodes() -> [{node(), inet:hostname(), inet:port_number()}].
+-spec list_nodes() -> [{node(), {inet:hostname(), inet:port_number()}}].
 list_nodes() ->
     gen_server:call(?MODULE, list_nodes, infinity).
 
