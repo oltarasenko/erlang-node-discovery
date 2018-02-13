@@ -67,6 +67,8 @@ init([]) ->
     end,
     Hosts = application:get_env(erlang_node_discovery, hosts, []),
     NodePorts = application:get_env(erlang_node_discovery, node_ports, []),
+    error_logger:info_msg("Using ~p as Hosts~n", [Hosts]),
+
     %% adding static nodes to db
     _ = [
         begin
